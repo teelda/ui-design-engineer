@@ -31,8 +31,12 @@ any AI coding tool that supports reusable project instructions.
 
 ## Why this exists
 
-ReadPenn AI already runs this same category of check — AI-default palettes, font
+RedPenn AI already runs this same category of check — AI-default palettes, font
 monoculture, card overuse, missing alt text, placeholder-as-label, contrast failures,
 generic marketing copy — as live DOM audits inside the browser extension
 (`apps/extension/src/content/dom-inspector.ts`). This skill is that same design
 sense, written as guidance for *writing* UI instead of *scanning* it.
+
+## Product audit coverage
+
+The standalone skill now also reviews existing product journeys, AI results, Web3 flows and search readiness. It ranks findings with evidence and lists untested states. Existing copied installations need to reinstall to receive updates.
