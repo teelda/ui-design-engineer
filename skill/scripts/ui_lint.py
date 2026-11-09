@@ -11,8 +11,13 @@ HEX = re.compile(r"^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
 BLOCK = re.compile(r"([^{}]+)\{([^{}]+)\}", re.S)
 DECL = re.compile(r"([\w-]+)\s*:\s*([^;]+)")
 FIELD = re.compile(r"<(input|textarea)\b[^>]*\bplaceholder\s*=\s*(?:['\"][^'\"]*['\"]|\{[^}]+\})[^>]*>", re.I | re.S)
-COMMENT = re.compile(r"/\*.*?\*/|^[ \t]*//[^\n]*", re.S | re.M)
+COMMENT = re.compile(r"/\*.*?\*/|<!--.*?-->|(?<!:)//[^\n]*", re.S)
 SUPPRESSION = re.compile(r"ui-lint:\s*ok\s+([a-z-]+)\s*(?:--|—)\s*(\S.{2,})", re.I)
+ATTRIBUTE = r"(?<![\w:-]){}\s*=\s*(['\"])(.*?)\1"
+
+
+def literal_attribute(tag: str, name: str):
+    return re.search(ATTRIBUTE.format(re.escape(name)), tag, re.I | re.S)
 
 
 def line_number(source: str, offset: int) -> int:
@@ -74,33 +79,45 @@ def inspect(path: Path):
             flag(match.start(), kind, detail)
 
     if path.suffix.lower() in {".html", ".jsx", ".tsx"}:
-        labelled_ids = set(re.findall(r"<label\b[^>]*\b(?:for|htmlFor)\s*=\s*['\"]([^'\"]+)['\"]", clean, re.I))
-        element_ids = set(re.findall(r"\bid\s*=\s*['\"]([^'\"]+)['\"]", clean))
-        wrapping_labels = [match.span() for match in re.finditer(r"<label\b[^>]*>.*?</label\s*>", clean, re.I | re.S)]
+        labelled_ids = set()
+        wrapping_labels = []
+        for label in re.finditer(r"<label\b([^>]*)>(.*?)</label\s*>", clean, re.I | re.S):
+            label_text = re.sub(r"<[^>]+>", "", label.group(2)).strip()
+            name = literal_attribute(label.group(1), "for") or literal_attribute(label.group(1), "htmlFor")
+            if name and label_text:
+                labelled_ids.add(name.group(2))
+            wrapping_labels.append((label.start(), label.end(), label_text))
+        element_ids = {name.group(2) for tag in re.finditer(r"<[A-Za-z][^>]*>", clean)
+                       for name in [literal_attribute(tag.group(0), "id")] if name}
         for match in FIELD.finditer(clean):
             tag = match.group(0)
-            if any(start <= match.start() < end for start, end in wrapping_labels):
+            wrapper = next((text for start, end, text in wrapping_labels if start <= match.start() < end), None)
+            if wrapper:
                 continue
-            field_id = re.search(r"\bid\s*=\s*['\"]([^'\"]+)['\"]", tag)
-            if field_id and field_id.group(1) in labelled_ids:
+            if wrapper == "":
+                flag(match.start(), "label-unresolved", "wrapping label has no text in this file")
                 continue
-            aria_label = re.search(r"\baria-label\s*=\s*(['\"])(.*?)\1", tag, re.I | re.S)
+            field_id = literal_attribute(tag, "id")
+            if field_id and field_id.group(2) in labelled_ids:
+                continue
+            aria_label = literal_attribute(tag, "aria-label")
             if aria_label and aria_label.group(2).strip():
                 continue
-            labelledby = re.search(r"\baria-labelledby\s*=\s*(['\"])(.*?)\1", tag, re.I | re.S)
+            labelledby = literal_attribute(tag, "aria-labelledby")
             if labelledby:
                 refs = labelledby.group(2).split()
                 if refs and all(ref in element_ids for ref in refs):
                     continue
                 flag(match.start(), "label-unresolved", "aria-labelledby references an ID not found in this file")
                 continue
-            if re.search(r"\baria-(?:label|labelledby)\s*=\s*\{", tag, re.I):
+            if re.search(r"(?<![\w:-])aria-(?:label|labelledby)\s*=\s*\{", tag, re.I):
                 flag(match.start(), "label-unresolved", "dynamic ARIA name needs a rendered check")
                 continue
             flag(match.start(), "placeholder-label", "verify a persistent label; placeholder alone is insufficient")
 
     for block in BLOCK.finditer(clean):
-        declarations = {key.lower(): value.strip() for key, value in DECL.findall(block.group(2))}
+        matches = list(DECL.finditer(block.group(2)))
+        declarations = {match.group(1).lower(): match.group(2).strip() for match in matches}
         foreground = rgb(declarations.get("color", ""))
         background = rgb(declarations.get("background-color", declarations.get("background", "")))
         if foreground is None or background is None:
@@ -112,7 +129,8 @@ def inspect(path: Path):
         threshold = 3 if size_px >= 24 or (size_px >= 14 * 96 / 72 and bold) else 4.5
         ratio = contrast(foreground, background)
         if ratio < threshold:
-            flag(block.start(), "contrast", f"same-rule solid colors {ratio:.2f}:1 below {threshold}:1; verify rendered text")
+            color_match = next(match for match in matches if match.group(1).lower() == "color")
+            flag(block.start(2) + color_match.start(), "contrast", f"same-rule solid colors {ratio:.2f}:1 below {threshold}:1; verify rendered text")
     return sorted(findings)
 
 
