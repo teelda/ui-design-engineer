@@ -14,4 +14,4 @@ These examples show the decision boundary. They are **not** results from a model
 
 **Poor finding:** “The form has no accessible labels and the submit button does not work.” Neither claim follows from a screenshot.
 
-**Better finding:** “The visible field prompt disappears when typing if it is a placeholder. Verify a persistent programmatic label in the DOM. Submit behavior and keyboard focus were not tested.” The observation, inference, and missing evidence are separated.
+**Better observation:** “The screenshot shows an in-field prompt. Whether a persistent label or accessible name exists is unverified; inspect the DOM and the populated state. Submit behavior and keyboard focus were not tested.” The visible fact and verification question stay separate from a confirmed defect.
