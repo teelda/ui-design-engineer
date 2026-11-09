@@ -1,6 +1,6 @@
 # Product quality skills
 
-Three early agent skills for people building and reviewing web products. They help an agent keep an existing design system intact, follow a product journey, and separate search-readiness evidence from guesses. They are instructions and small checkers for your AI coding tool, **not** the RedPenn browser extension or a substitute for user research.
+Three early skills for autonomous agents building and reviewing web products. They give experienced builders and reviewers decision and verification discipline while preserving existing design systems. They are instructions and small checkers for AI coding tools, **not** the RedPenn browser extension or a substitute for product research.
 
 | Skill | Use it when | What it returns |
 |---|---|---|
@@ -43,7 +43,7 @@ python3 skills/ui-design-engineer/scripts/ui_lint.py <project-paths>
 
 Read its [coverage and limits](skills/ui-design-engineer/references/source-checker.md) before interpreting findings. The search skill currently uses an evidence checklist; the optional search checker in draft PRs is not part of this release.
 
-Run the repository's 10 checker tests with `python3 -m unittest discover -s evals -p 'test_*.py'`. The [evaluation protocol](evals/README.md) describes paired agent tests, but no repeated, blinded results have been published. These skills have shown useful behavior in individual reviews; their effect on design quality and user outcomes is **not yet measured**. Reports should label observation, inference, and untested scope rather than promise accuracy, accessibility certification, search rankings, or AI citations.
+Run the repository's 10 checker tests with `python3 -m unittest discover -s evals -p 'test_*.py'`. The [evaluation protocol](evals/README.md) describes paired agent tests. One [exploratory paired pilot](evals/results/quiet-pilot/README.md) found nearly identical small edits with and without the UI skill; it does not demonstrate a quality benefit. Repeated, blinded results have not been published, and effects on design quality and user outcomes are **not yet measured**. Reports should label observation, inference, and untested scope rather than promise accuracy, accessibility certification, search rankings, or AI citations.
 
 Found a wrong or missing finding? Open a GitHub issue with the skill name, agent/tool, exact request, reachable states, and the relevant output. Remove private URLs, credentials, and user data before posting.
 

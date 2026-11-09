@@ -1,0 +1,3 @@
+Updated only [index.html](/tmp/ui-skill-eval/quiet-control-1/index.html): enlarged Review targets to at least 44×44px and added request-specific accessible names.
+
+Verified content, URLs, table headers, and responsive rules remain intact. Visual checks at 390px and desktop remain unverified because Chrome could not launch in the sandbox.

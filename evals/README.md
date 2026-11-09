@@ -16,6 +16,12 @@ Run the same model and tools **three times with the skill installed and three ti
 
 Score each dimension 0–2 from the saved artifact and observed interaction, not the agent's self-description. Record specific failures and median scores across three runs. Compare the screenshots blindly for hierarchy, legibility, and composition before revealing conditions. A reviewer who did not generate the outputs should score them.
 
+## Unfamiliar and restraint cases
+
+Keep the [quiet task fixture](fixtures/quiet-task/README.md) out of the worked examples and skill references. It probes minimal-change judgment and whether an audit can return no significant findings. Add at least one independently sourced, unbranded task that has not appeared in the skill guidance. Freeze its input, prompt, allowed tools, baseline behavior, and scoring anchors **before** running either condition. Include preservation of routes, tracking hooks, validation, and locale behavior when they exist in the fixture.
+
+For each task, run the same agent/model and tool access with and without the skill. Isolate workspaces and histories, randomize artifact names, and use a scorer who did not produce the outputs. Record run counts, exact prompts, model/version, time budget, screenshots, functional checks, raw scores, and failures. Include a restraint score: unnecessary edits and invented findings count against the result. For audit cases, separate recall of planted issues from false positives; a clean fixture should have no significant finding. Publish the raw artifacts and paired scores, including weaker runs, or state that impact remains unmeasured. Do not tune instructions to a held-out case and then report that case as held out.
+
 ## Exploratory cases
 
 These require fixed inputs before they can support a published comparison: dense dashboard with long/empty data; accessible signup with validation; existing-system filter component; screenshot-only audit; and a Web3 wallet handoff using safe mock screens. Use the same scoring anchors and save the actual fixtures alongside any results. Do not claim improvement from the protocol alone.

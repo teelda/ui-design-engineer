@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review queue</title>
+<style>
+  :root { font: 16px/1.5 system-ui, sans-serif; color: #182c31; background: #f6f8f8; }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 20px; }
+  h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 8px; }
+  p { margin: 0 0 24px; }
+  table { width: 100%; border-collapse: collapse; background: white; }
+  th, td { padding: 14px 12px; border-bottom: 1px solid #ced9dc; text-align: left; }
+  th { font-weight: 700; }
+  td:last-child, th:last-child { text-align: right; }
+  a { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; color: #075977; text-underline-offset: 3px; }
+  a:focus-visible { outline: 3px solid #cc6d24; outline-offset: 3px; }
+  @media (max-width: 440px) { main { padding: 24px 12px; } th, td { padding: 12px 6px; } }
+</style>
+<main>
+  <h1>Review queue</h1>
+  <p>Open a request to review its details.</p>
+  <table>
+    <thead><tr><th scope="col">Request</th><th scope="col">Owner</th><th scope="col">Action</th></tr></thead>
+    <tbody>
+      <tr><td>Homepage copy</td><td>Ada</td><td><a href="/requests/homepage" aria-label="Review Homepage copy">Review</a></td></tr>
+      <tr><td>Checkout labels</td><td>Ben</td><td><a href="/requests/checkout" aria-label="Review Checkout labels">Review</a></td></tr>
+    </tbody>
+  </table>
+</main>
+</html>

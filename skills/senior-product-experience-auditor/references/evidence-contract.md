@@ -12,7 +12,7 @@ Severity describes impact, not confidence. An inferred S0 risk stays inferred un
 
 ## Finding
 
-ID; screen/URL; component; severity; category/layer; classification (observed defect / inferred risk / recommendation); observed issue; user consequence; evidence and its source; expected behavior; recommended fix; measurable acceptance criterion; screenshot/locator or source reference. Use exact source references only when inspected. Deduplicate by root cause without merging unrelated controls just because they share a word such as “label.”
+ID; screen/URL; component; severity; confidence (high / medium / low); category/layer; classification (observed defect / inferred risk / subjective preference); observed issue; user consequence or plausible concern; evidence and its source; expected behavior; recommended fix; measurable acceptance criterion; screenshot/locator or source reference. Use exact source references only when inspected. State what would raise confidence for inferred risks. Deduplicate by root cause without merging unrelated controls just because they share a word such as “label.”
 
 ## Report
 
