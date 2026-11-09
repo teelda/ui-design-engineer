@@ -4,18 +4,24 @@ Answer engines — ChatGPT search, Perplexity, Claude, Gemini, Google AI Overvie
 
 | Check | Evidence required | Failure condition | Fix and verification |
 |---|---|---|---|
-| **AI crawler access** | `robots.txt` groups for the agents the owner cares about, plus any CDN/WAF bot rules | An agent is blocked or allowed **contrary to the owner's stated intent**, or a firewall blocks it regardless of `robots.txt` | Write explicit groups per agent; refetch `robots.txt`; check firewall logs or settings when available. |
-| **Readable without JavaScript** | Raw initial HTML (no rendering) of each intended page | The answer, headings, or product name appear only after client-side rendering | Server-render or pre-render the substantive content; refetch raw HTML. |
+| **AI crawler access** | The owner's intent per engine and purpose (see below), the effective `robots.txt` rules, and any CDN/WAF bot rules | The effective rules block or allow a crawler **contrary to the owner's stated intent**, or a firewall blocks it regardless of `robots.txt` | Change only the rules that conflict with intent; existing wildcard rules that already match intent need no per-agent group. Refetch `robots.txt`; check firewall logs or settings when available. |
+| **Content without JavaScript** | Raw initial HTML (no rendering) compared with the rendered DOM | **Not a universal failure.** Google renders JavaScript for Search, and its AI features have no extra technical requirements. Record content that exists only after rendering as a **risk** for engines whose crawlers are not documented to render it. Record a **failure** only when a specific engine is observed or documented to miss the content. | When the risk matters to the owner, server-render or pre-render the substantive content; refetch raw HTML and recheck the affected engine. |
 | **Answer-first structure** | The representative question for the page and where it is answered | The direct answer is buried below marketing copy, inside tabs/accordions only, or split across pages | Put a plain one-to-three-sentence answer near the top under a heading that matches the question; keep detail below it. |
 | **Entity clarity** | Product/organisation name, one-line description, and `Organization`/`Product`/`SoftwareApplication` markup where relevant; the same facts on docs and official profiles | Name, description, or key facts differ across the site, docs, and profiles, or markup contradicts visible text | Use one canonical name and description; align markup and profiles; link profiles with `sameAs`. |
 | **Freshness and provenance** | Visible published/updated date, author or owner, and sources for factual claims | Undated time-sensitive content, unattributed claims, or stale facts | Add dates and sources; update or retire stale pages. |
 | **`llms.txt`** (optional) | Whether `/llms.txt` exists and what it lists | It lists private, outdated, or non-canonical pages | Treat it as an optional proposal ([llmstxt.org](https://llmstxt.org/)), not a standard or ranking factor; keep it consistent with the sitemap if used. |
 
-## AI crawler names
+## Three kinds of bot control
 
-Agent names and their purposes change; check each vendor's current crawler documentation before writing rules. As a starting point, vendors separate **training** crawlers from **search/retrieval** and **user-triggered** fetchers — for example OpenAI (`GPTBot`, `OAI-SearchBot`, `ChatGPT-User`), Anthropic (`ClaudeBot`, `Claude-SearchBot`, `Claude-User`), and Perplexity (`PerplexityBot`, `Perplexity-User`). `Google-Extended` is a `robots.txt` control token for Gemini model use, not a separate crawler, and does not change Google Search or AI Overviews eligibility. Blocking a training crawler and allowing a search crawler is a legitimate owner choice; the check is whether the rules match intent.
+Agent names and their purposes change; check each vendor's current crawler documentation before judging rules. Treat these cases separately:
 
-Several AI crawlers have been reported not to execute JavaScript. Do not assume either way: the raw-HTML check above is the evidence.
+1. **Training crawlers** (for example OpenAI `GPTBot`, Anthropic `ClaudeBot`) collect content for model training. Blocking them is a legitimate owner choice and does not by itself remove a site from AI search answers.
+2. **Search crawlers** (for example OpenAI `OAI-SearchBot`, Anthropic `Claude-SearchBot`, `PerplexityBot`) index pages for an engine's search answers. These are the `robots.txt` controls that matter for being cited. For OpenAI, `OAI-SearchBot` — not `ChatGPT-User` — is the Search control.
+3. **User-triggered fetchers** (for example `ChatGPT-User`, `Claude-User`, `Perplexity-User`) visit a page because a person asked. Vendors document that `robots.txt` may not apply to these visits, so do not report a `robots.txt` rule as controlling them; a firewall rule is the only reliable block.
+
+`Google-Extended` is a `robots.txt` control token for Gemini model use, not a separate crawler, and does not change Google Search or AI Overviews eligibility; those follow `Googlebot`.
+
+The check is whether the **effective** rules match the owner's intent for each case — not whether every agent has its own group. References: [OpenAI crawlers](https://developers.openai.com/api/docs/bots).
 
 ## Observed visibility (only when requested)
 

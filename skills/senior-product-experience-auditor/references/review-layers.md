@@ -16,7 +16,7 @@ For a journey or launch review, record each layer as tested / partially tested /
 | Domain rules | Activate only applicable domain overlays. Separate UX defects from unverified legal or specialist claims. |
 | AI UX | Generated versus source data, uncertainty, citations, progress truthfulness, interruption/cancel, retry, incorrect findings, feedback, approval boundaries and score semantics. |
 | Implementation | Actual behavior, console/API errors, persistence, refresh, tab switching, races, performance measurements and release parity. Distinguish production, preview and mocks. |
-| Discoverability | For public pages: can people and answer engines find, read and cite them? For a launch review, run `search-answer-readiness` and summarise its verdicts here; if it is not installed, record the layer as not tested. |
+| Discoverability | For public pages: can people and answer engines find, read and cite them? Load `search-answer-readiness` for its checklist when installed and summarise its verdicts here. Without it, still check what the evidence allows — HTTP status, `robots.txt`, robots meta, canonical, titles, crawlable links — and note that the full checklist was not loaded. Mark checks **not tested** only when the evidence or tools to run them are missing. |
 | Behavioural evidence | Funnel steps and drop-off, success-event tracking, retention or repeat use, and support/feedback themes, from owner-supplied data only. Map each high-drop step to interface findings, or mark it unexplained. Record "not tested" when no data is supplied. |
 
 Useful primary references (check current guidance when citing specific requirements):
