@@ -1,42 +1,21 @@
 # UI Design Engineer
 
-A Claude Code / Agent Skill that turns "make it look good" into a checklist of
-specific, deliberate design decisions — color, typography, copy, components, motion,
-layout, and accessibility — so UI work stops defaulting to generic AI output.
-
-## What's inside
-
-- [`skill/SKILL.md`](skill/SKILL.md) — the skill itself: five up-front design decisions,
-  a category-by-category avoid/do checklist, a build workflow, and a pre-ship checklist.
+A reusable skill for building and refining web interfaces in their product context. It covers design decisions, component and token reuse, interaction states, responsive checks, and honest verification. A focused UI-audit route has optional Web3 and search-readiness references; broad product audits belong in a dedicated audit skill.
 
 ## Install
-
-**Local, right now (this repo):**
-
-```bash
-mkdir -p .claude/skills/ui-design-engineer
-cp skill/SKILL.md .claude/skills/ui-design-engineer/SKILL.md
-```
-
-Claude Code picks up project skills automatically from `.claude/skills/`.
-
-**As a standalone install:**
 
 ```bash
 npx skills add teelda/ui-design-engineer
 ```
 
-You can also download or copy `skill/SKILL.md` directly from GitHub and add it to
-any AI coding tool that supports reusable project instructions.
+For a manual install, copy the **whole** [`skill/`](skill/) folder into your agent's skills directory. `SKILL.md` links to `references/` and `scripts/`; copying that file alone omits those capabilities. Existing manual copies need replacing when you update.
 
-## Why this exists
+## Use
 
-RedPenn AI already runs this same category of check — AI-default palettes, font
-monoculture, card overuse, missing alt text, placeholder-as-label, contrast failures,
-generic marketing copy — as live DOM audits inside the browser extension
-(`apps/extension/src/content/dom-inspector.ts`). This skill is that same design
-sense, written as guidance for *writing* UI instead of *scanning* it.
+- Build or refine a page, component, form, or dashboard while preserving its existing design system.
+- Request a focused UI review with evidence limits stated. Read the Web3 or search reference only when that topic is in scope.
+- Run `python3 skill/scripts/ui_lint.py <paths>` for source-level review candidates. It does not certify accessibility or visual quality.
 
-## Product audit coverage
+The [evaluation cases](evals/README.md) provide paired with-skill/without-skill prompts and a scoring rubric. [Illustrative examples](evals/examples.md) show how context changes a decision. No paired benchmark has been run or published yet.
 
-The standalone skill now also reviews existing product journeys, AI results, Web3 flows and search readiness. It ranks findings with evidence and lists untested states. Existing copied installations need to reinstall to receive updates.
+RedPenn's browser extension has its own DOM inspector. This public skill does not require RedPenn or access to its private source. Its guidance is separate from the extension's hosted audit model.
