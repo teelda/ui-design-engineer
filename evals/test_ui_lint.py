@@ -38,7 +38,7 @@ class UiLintTests(unittest.TestCase):
         self.assertNotIn("contrast", kinds)
 
     def test_jsx_names_and_tailwind_candidates(self):
-        kinds = self.inspect("Form.tsx", """<label><input placeholder={hint} /></label>
+        kinds = self.inspect("Form.tsx", """<label>Name<input placeholder={hint} /></label>
           <input placeholder={hint} aria-labelledby="missing" />
           <input placeholder={hint} aria-label={name} />
           <div className="bg-gradient-to-r transition-all outline-none" />""")
@@ -71,6 +71,26 @@ class UiLintTests(unittest.TestCase):
             (root / "node_modules").mkdir()
             (root / "node_modules" / "bad.css").write_text(".bad { color: #777; background: #fff; }")
             self.assertEqual(ui_lint.collect_files([root]), [root / "app.css"])
+
+    def test_contrast_location_and_suppression_after_another_rule(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "rules.css"
+            path.write_text(".first {color: #000;}\n/* ui-lint: ok contrast -- reviewed example */\n.second {color: #aaa; background: #fff;}\n")
+            self.assertEqual(ui_lint.inspect(path), [])
+            path.write_text(".first {color: #000;}\n/* no suppression */\n.second {color: #aaa; background: #fff;}\n")
+            self.assertEqual([(line, kind) for line, kind, _ in ui_lint.inspect(path)], [(3, "contrast")])
+
+    def test_data_id_and_empty_wrapping_label(self):
+        kinds = self.inspect("fields.html", """<span data-id="email-label">Email</span>
+          <input placeholder="Email" aria-labelledby="email-label">
+          <label><input placeholder="Email"></label>""")
+        self.assertEqual(kinds.count("label-unresolved"), 2)
+
+    def test_html_and_trailing_scss_comments_are_ignored(self):
+        kinds = self.inspect("page.html", "<!-- <input placeholder='Email'> -->")
+        self.assertEqual(kinds, [])
+        kinds = self.inspect("style.scss", ".ok { color: #000; } // transition-all should not count")
+        self.assertEqual(kinds, [])
 
 
 if __name__ == "__main__":
