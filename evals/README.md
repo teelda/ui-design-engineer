@@ -20,6 +20,6 @@ Score each dimension 0–2 from the saved artifact and observed interaction, not
 
 These require fixed inputs before they can support a published comparison: dense dashboard with long/empty data; accessible signup with validation; existing-system filter component; screenshot-only audit; and a Web3 wallet handoff using safe mock screens. Use the same scoring anchors and save the actual fixtures alongside any results. Do not claim improvement from the protocol alone.
 
-The [search-readiness fixture](fixtures/search-readiness/README.md) has known technical and on-page defects for testing the search checklist. It is a diagnostic case, not evidence of ranking or AI citation outcomes.
+The [search-readiness fixture](fixtures/search-readiness/README.md) has known technical and on-page defects for testing the `search-answer-readiness` skill. It is a diagnostic case, not evidence of ranking or AI citation outcomes.
 
 Run checker tests from the repository root with `python3 -m unittest discover -s evals -p 'test_*.py'`. The fixed fixture itself is a UI task, not a checker test.

@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 
-SCRIPT = Path(__file__).resolve().parents[1] / "skill/scripts/ui_lint.py"
+SCRIPT = Path(__file__).resolve().parents[1] / "skills/ui-design-engineer/scripts/ui_lint.py"
 spec = importlib.util.spec_from_file_location("ui_lint", SCRIPT)
 ui_lint = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ui_lint)
