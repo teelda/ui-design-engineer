@@ -11,6 +11,7 @@ Standard library only.
 import argparse
 import gzip
 import json
+import os
 import re
 import sys
 import urllib.error
@@ -88,6 +89,7 @@ def fetch(url, timeout, cache, max_redirects=10):
             break
         lowered = {key.lower(): value for key, value in headers.items()}
         if 300 <= status < 400 and lowered.get("location"):
+            raw.close()
             response.chain.append((status, current))
             current = urllib.parse.urljoin(current, lowered["location"])
             continue
@@ -96,6 +98,8 @@ def fetch(url, timeout, cache, max_redirects=10):
             response.body = raw.read(MAX_BYTES + 1)[:MAX_BYTES]
         except OSError as error:
             response.error = str(error)
+        finally:
+            raw.close()
         break
     else:
         response.error = f"more than {max_redirects} redirects"
@@ -474,6 +478,172 @@ def check_excluded(url, args, cache, report, robots):
         report.add(url, "exclusion", "fail", f"returns {response.status}, is crawlable and has no noindex: it can be indexed")
 
 
+# ---------------------------------------------------------------- PageSpeed Insights
+
+PSI_ENDPOINT = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
+# Core Web Vitals at the 75th percentile: (good up to, poor above). https://web.dev/articles/vitals
+VITALS = (
+    ("LARGEST_CONTENTFUL_PAINT_MS", "LCP", 2500, 4000, lambda v: v, "ms"),
+    ("INTERACTION_TO_NEXT_PAINT", "INP", 200, 500, lambda v: v, "ms"),
+    ("CUMULATIVE_LAYOUT_SHIFT_SCORE", "CLS", 0.1, 0.25, lambda v: v / 100, ""),  # API reports CLS x 100
+)
+
+
+def fetch_psi(url, strategy, key, timeout):
+    query = {"url": url, "strategy": strategy, "category": "performance"}
+    if key:
+        query["key"] = key
+    request = urllib.request.Request(f"{PSI_ENDPOINT}?{urllib.parse.urlencode(query)}", headers={"User-Agent": USER_AGENT})
+    try:
+        with urllib.request.urlopen(request, timeout=max(timeout, 90)) as response:
+            return json.loads(response.read()), None
+    except urllib.error.HTTPError as error:
+        try:
+            message = json.loads(error.read()).get("error", {}).get("message", "")
+        except ValueError:
+            message = ""
+        return None, f"HTTP {error.code} {message}".strip()
+    except (urllib.error.URLError, OSError, ValueError) as error:
+        return None, str(getattr(error, "reason", error))
+
+
+def evaluate_psi(data, strategy):
+    """Turn a PageSpeed Insights response into (check, result, detail) tuples."""
+    findings = []
+    experience = data.get("loadingExperience") or {}
+    metrics = experience.get("metrics") or {}
+    scope = "this page"
+    if not metrics or experience.get("origin_fallback"):
+        origin_metrics = (data.get("originLoadingExperience") or {}).get("metrics") or {}
+        if origin_metrics:
+            metrics, scope = origin_metrics, "the whole origin (not enough data for this page)"
+    if metrics:
+        parts, worst = [], "pass"
+        for key, name, good, poor, convert, unit in VITALS:
+            if key not in metrics or "percentile" not in metrics[key]:
+                parts.append(f"{name} no data")
+                continue
+            value = convert(metrics[key]["percentile"])
+            rating = "good" if value <= good else "poor" if value > poor else "needs improvement"
+            parts.append(f"{name} {value:g}{unit} ({rating})")
+            if rating == "poor":
+                worst = "fail"
+            elif rating == "needs improvement" and worst == "pass":
+                worst = "risk"
+        findings.append((f"Core Web Vitals ({strategy})", worst, f"real-user p75 for {scope}: " + ", ".join(parts)))
+    else:
+        findings.append((f"Core Web Vitals ({strategy})", "not_tested", "no Chrome UX Report field data for this page or origin; lab numbers below are not a substitute"))
+    audits = (data.get("lighthouseResult") or {}).get("audits") or {}
+    lab = []
+    for audit, name, scale, unit in (("largest-contentful-paint", "LCP", 1, "ms"), ("total-blocking-time", "TBT", 1, "ms"), ("cumulative-layout-shift", "CLS", 1, "")):
+        value = (audits.get(audit) or {}).get("numericValue")
+        if value is not None:
+            lab.append(f"{name} {value * scale:.0f}{unit}" if unit else f"{name} {value:.3f}")
+    if lab:
+        findings.append((f"lab performance ({strategy})", "info", "Lighthouse lab run: " + ", ".join(lab) + " (one simulated load; TBT stands in for INP)"))
+    return findings
+
+
+def check_psi(urls, args, cache, report):
+    for url in urls:
+        target = fetch(url, args.timeout, cache).final_url
+        for strategy in args.psi_strategy:
+            data, error = fetch_psi(target, strategy, args.psi_key, args.timeout)
+            if error:
+                hint = "; the keyless quota is shared and often exhausted, so set PSI_API_KEY or pass --psi-key" if error.startswith("HTTP 429") and not args.psi_key else ""
+                report.add(url, f"Core Web Vitals ({strategy})", "not_tested", f"PageSpeed Insights request failed: {error}{hint}")
+                continue
+            for check, result, detail in evaluate_psi(data, strategy):
+                report.add(url, check, result, detail)
+
+
+# ---------------------------------------------------------------- crawl
+
+ASSET = re.compile(r"\.(png|jpe?g|gif|webp|avif|svg|ico|pdf|zip|gz|mp4|webm|mp3|woff2?|ttf|css|js|json|xml|txt)$", re.I)
+
+
+def crawl(args, cache, report, robots, page_data, sitemap_urls):
+    """Follow same-host <a href> links from the checked pages, up to args.crawl pages."""
+    hosts = {urllib.parse.urlsplit(source).netloc for source in page_data}
+    queue = [(normalise(urllib.parse.urljoin(source, href)), source) for source, page in page_data.items() for href in page.links]
+    seen, crawled = set(page_data), {}
+    broken, blocked, redirected, noindex, canonical_elsewhere, untitled = [], [], [], [], [], []
+    while queue and len(crawled) < args.crawl:
+        url, source = queue.pop(0)
+        parts = urllib.parse.urlsplit(url)
+        if url in seen or parts.netloc not in hosts or parts.scheme not in ("http", "https") or ASSET.search(parts.path):
+            continue
+        seen.add(url)
+        allowed, _ = robots_allows(robots.get(origin_of(url), []), "Googlebot", robots_path(url))
+        if not allowed:
+            blocked.append(url)
+            continue
+        response = fetch(url, args.timeout, cache)
+        if response.error or response.status >= 400:
+            broken.append(f"{url} ({response.status or response.error}, linked from {source})")
+            continue
+        if response.chain:
+            redirected.append(f"{url} -> {response.final_url}")
+        if "html" not in response.headers.get("content-type", "html"):
+            continue
+        page = parse_page(response.text)
+        final = normalise(response.final_url)
+        crawled[final] = page
+        directives = robots_directives(response, page)
+        if "noindex" in directives:
+            noindex.append(final)
+        canonicals = [normalise(urllib.parse.urljoin(response.final_url, c)) for c in page.canonicals if c]
+        if canonicals and canonicals[0] != final:
+            canonical_elsewhere.append(final)
+        if not page.title:
+            untitled.append(final)
+        queue.extend((normalise(urllib.parse.urljoin(final, href)), final) for href in page.links)
+
+    complete = not any(
+        urllib.parse.urlsplit(u).netloc in hosts and u not in seen and not ASSET.search(urllib.parse.urlsplit(u).path)
+        for u, _ in queue
+    )
+    report.add("crawl", "coverage", "info", f"followed links to {len(crawled)} more page(s) on {', '.join(sorted(hosts))}" + ("; every linked page was reached" if complete else f"; stopped at the --crawl limit of {args.crawl}"))
+    if broken:
+        report.add("crawl", "broken links", "fail", f"{len(broken)} internal link(s) return an error: " + "; ".join(broken[:10]) + (" …" if len(broken) > 10 else ""))
+    else:
+        report.add("crawl", "broken links", "pass", "no internal link returned an error")
+    if redirected:
+        report.add("crawl", "internal redirects", "info", f"{len(redirected)} internal link(s) redirect; link to the final URL instead: " + "; ".join(redirected[:5]))
+    if blocked:
+        report.add("crawl", "blocked links", "info", f"{len(blocked)} linked page(s) are blocked by robots.txt for Googlebot and were not fetched: " + "; ".join(blocked[:5]))
+    if untitled:
+        report.add("crawl", "metadata", "risk", f"{len(untitled)} page(s) without a <title>: " + "; ".join(untitled[:5]))
+    indexable = {
+        url: page for url, page in {**page_data, **crawled}.items()
+        if url not in noindex and url not in canonical_elsewhere and page.title
+    }
+    titles = {}
+    for url, page in indexable.items():
+        titles.setdefault(page.title.strip().lower(), []).append(url)
+    duplicates = [urls for urls in titles.values() if len(urls) > 1]
+    if duplicates:
+        report.add("crawl", "duplicate titles", "risk", f"{len(duplicates)} title(s) shared by several indexable pages: " + "; ".join(", ".join(group[:3]) for group in duplicates[:5]))
+    if noindex:
+        report.add("crawl", "noindex pages", "info", f"{len(noindex)} linked page(s) are noindex; confirm each is intended: " + "; ".join(noindex[:5]))
+    if canonical_elsewhere:
+        report.add("crawl", "canonical", "info", f"{len(canonical_elsewhere)} linked page(s) point their canonical elsewhere: " + "; ".join(canonical_elsewhere[:5]))
+    # Compare each host only with its own sitemap; a host without one is skipped.
+    by_host = {}
+    for origin, urls in sitemap_urls.items():
+        if urls:
+            by_host.setdefault(urllib.parse.urlsplit(origin).netloc, set()).update(urls)
+    missing = sorted(u for u in indexable if urllib.parse.urlsplit(u).netloc in by_host and u not in by_host[urllib.parse.urlsplit(u).netloc])
+    if missing:
+        report.add("crawl", "sitemap coverage", "info", f"{len(missing)} indexable linked page(s) are not in their host's sitemap: " + "; ".join(missing[:5]))
+    if complete:
+        reached = set(page_data) | set(crawled)
+        orphans = sorted(u for host, urls in by_host.items() if host in hosts for u in urls if u not in reached)
+        if orphans:
+            report.add("crawl", "orphan pages", "risk", f"{len(orphans)} sitemap URL(s) are not linked from any crawled page: " + "; ".join(orphans[:5]))
+    return crawled
+
+
 def run(urls, excluded, args):
     report, cache, robots, sitemap_urls, page_data = Report(), {}, {}, {}, {}
     # robots.txt and sitemaps belong to the host that actually serves each page,
@@ -494,8 +664,12 @@ def run(urls, excluded, args):
     for url in excluded:
         check_excluded(url, args, cache, report, robots)
 
+    crawled = crawl(args, cache, report, robots, page_data, sitemap_urls) if getattr(args, "crawl", 0) else {}
+    if getattr(args, "psi", False):
+        check_psi(urls, args, cache, report)
+
     linked = set()
-    for source, page in page_data.items():
+    for source, page in {**page_data, **crawled}.items():
         for href in page.links:
             target = normalise(urllib.parse.urljoin(source, href))
             if target != source:
@@ -521,7 +695,10 @@ def run(urls, excluded, args):
                 report.add(url, "sitemap entry", "fail", f"listed in sitemap but returns {response.status or response.error}" + (" after a redirect" if response.chain else ""))
             elif "noindex" in robots_directives(response, parse_page(response.text)):
                 report.add(url, "sitemap entry", "fail", "listed in sitemap but marked noindex")
-    report.add("all pages", "Search Console", "not_tested", "actual indexing, Core Web Vitals field data and AI citations need owner access or repeated observation")
+    untested = "actual indexing and AI citations need owner access or repeated observation"
+    if not getattr(args, "psi", False):
+        untested += "; Core Web Vitals not checked (run with --psi)"
+    report.add("all pages", "Search Console", "not_tested", untested)
     return report
 
 
@@ -546,6 +723,10 @@ def main(argv=None):
     parser.add_argument("--timeout", type=float, default=15)
     parser.add_argument("--min-words", type=int, default=50, help="raw-HTML word count below which content may need JavaScript")
     parser.add_argument("--sitemap-sample", type=int, default=25, help="how many sitemap entries to fetch and check")
+    parser.add_argument("--crawl", type=int, default=0, metavar="N", help="follow same-host links from the URLs to up to N more pages")
+    parser.add_argument("--psi", action="store_true", help="fetch Core Web Vitals from Google PageSpeed Insights (sends each URL to Google)")
+    parser.add_argument("--psi-strategy", nargs="+", choices=("mobile", "desktop"), default=["mobile"])
+    parser.add_argument("--psi-key", default=os.environ.get("PSI_API_KEY"), help="PageSpeed Insights API key (default: $PSI_API_KEY); the keyless quota is shared and often exhausted")
     args = parser.parse_args(argv)
     for url in args.urls + args.exclude:
         if urllib.parse.urlsplit(url).scheme not in ("http", "https"):
