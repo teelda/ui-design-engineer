@@ -18,10 +18,16 @@ Scale the review to the request: a single screen or component gets a short ranke
 
 Use [the review layers](references/review-layers.md) for coverage. Read only the applicable [surface checks](references/surfaces.md), [product-pattern checks](references/product-patterns.md), and [domain overlays](references/domain-overlays.md). Use [the evidence contract](references/evidence-contract.md) for every report. A responsive web test does not establish native mobile or desktop behavior.
 
+## Journey coverage for web apps
+
+When asked to audit a product or web app, treat the request as a journey review unless the user limits it to one screen. Before grading, inventory the visible navigation and primary CTAs: destination URL, modal, sign-up, wallet connection, or external handoff. Follow the core task and each materially different reachable path; record which states and viewports were actually opened. A public marketing page can expose many routes, while a gated app may expose only its entry and handoff states.
+
+At a sign-up or wallet gate, inspect the promise, required action, cancellation, error and return path. Continue through the gate only with authorized test access and safe fixtures. Never use a personal wallet, real funds, seed phrase, or signature merely to complete an audit. If access is unavailable, inspect reachable pages and supplied source or recordings, request the specific test access needed, and label protected steps **not tested**. Call the result an **entry-and-gate review**, not a full product audit. A CTA, route name, or source file does not prove the gated experience works.
+
 ## Workflow
 
 1. Describe the core user task and success state. Map entry, setup, main action, result, saved state, resume and recovery where relevant. Follow the user's outcome across handoffs rather than stopping at one polished screen.
-2. Inventory evidence with capture time, URL/viewport or source revision, and whether data is real or mocked. Never pass off an older capture as a new check.
+2. Inventory evidence with capture time, URL/viewport or source revision, and whether data is real or mocked. For a web-app journey, include a route/CTA coverage list: opened, reached a gate, source-only, or not tested. Never pass off an older capture as a new check.
 3. Walk the task as a first-time user: would they know the goal, notice the correct action, understand its consequence, and recognize the outcome?
 4. Inspect relevant layers and edge states. Use safe tests for duplicate submission, navigation during loading, empty/partial data, denied permissions, long text, interrupted work, undo, concurrent changes and cross-device continuity when applicable. Do not invent defects to fill categories.
 5. Rank unique root problems using S0–S4. Separate observed defects, inferred risks and recommendations. Keep strengths and limitations separate from failures.
