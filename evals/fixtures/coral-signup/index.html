@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Folde Notes — Early access</title>
+  <style>
+    :root { --coral:#d83f25; --coral-dark:#a92c1b; --cream:#fff8f1; --ink:#26211f; --muted:#756e69; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--cream); font:16px/1.5 system-ui,sans-serif; }
+    header { padding:22px 6vw; display:flex; justify-content:space-between; align-items:center; }
+    .brand { font-weight:800; letter-spacing:-.04em; font-size:23px; color:var(--ink); text-decoration:none; }
+    nav { display:flex; gap:25px; }
+    nav a { color:var(--ink); }
+    main { padding:45px 6vw 80px; display:grid; grid-template-columns:1fr 1fr; gap:48px; min-width:760px; }
+    .eyebrow { color:var(--coral-dark); text-transform:uppercase; letter-spacing:.15em; font-size:12px; font-weight:700; }
+    h1 { font-size:clamp(45px,6vw,84px); line-height:1.02; letter-spacing:-.06em; margin:12px 0; }
+    .intro { font-size:20px; color:var(--muted); max-width:36ch; }
+    .art { min-height:420px; border-radius:36px; background:linear-gradient(125deg,#ef8165,var(--coral) 60%,#a92c1b); display:grid; place-items:center; box-shadow:0 30px 70px #a92c1b30; }
+    .art span { color:white; font-size:110px; transform:rotate(-10deg); font-weight:800; }
+    form { margin-top:75px; max-width:430px; }
+    input { width:100%; padding:16px; border:1px solid #b7aaa2; border-radius:10px; font:inherit; background:#fff; }
+    button { width:100%; margin-top:12px; padding:16px; border:0; border-radius:10px; background:var(--coral-dark); color:#fff; font:700 16px system-ui; cursor:pointer; }
+    #message { min-height:24px; margin-top:12px; }
+    footer { padding:24px 6vw; border-top:1px solid #e8dcd3; }
+    footer a { color:var(--coral-dark); }
+  </style>
+</head>
+<body>
+  <header><a class="brand" href="#top">Folde Notes</a><nav><a href="#how">How it works</a><a href="#signup">Early access</a></nav></header>
+  <main id="top">
+    <section>
+      <p class="eyebrow" id="how">A calmer place to plan</p>
+      <h1>Make room for better ideas.</h1>
+      <p class="intro">Collect the notes that matter and find your next step without the noise.</p>
+      <form id="signup">
+        <input id="email" type="email" required placeholder="Email address">
+        <button type="submit">Join early access</button>
+        <p id="message" aria-live="polite"></p>
+      </form>
+    </section>
+    <div class="art" aria-hidden="true"><span>f.</span></div>
+  </main>
+  <footer><a href="mailto:hello@folde.example">Contact</a> · <a href="#top">Back to top</a></footer>
+  <script>
+    document.querySelector('#signup').addEventListener('submit', event => {
+      event.preventDefault();
+      document.querySelector('#message').textContent = 'Thanks. You are on the list.';
+    });
+  </script>
+</body>
+</html>

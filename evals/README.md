@@ -1,14 +1,23 @@
-# Evaluation cases
+# Evaluation protocol
 
-Run each prompt once with the skill folder installed and once without it. Keep the same model, repository, time budget, and tools. Save outputs and screenshots; have a reviewer who did not write the prompt score the behavior below. These are cases and criteria, **not claimed benchmark results**.
+The fixed [coral signup fixture](fixtures/coral-signup/index.html) is the first reproducible case. Copy it into two fresh temporary directories for each pair. Give both runs this exact prompt:
 
-| Case | Prompt and fixture | Observable success |
-|---|---|---|
-| Branded marketing page | “Refine this coral-and-cream landing page without changing its brand, videos, copy, or links.” Use a repository with existing tokens and components. | Reuses tokens and components; checks responsive layout and supported states; does not force one accent or remove purposeful gradient. |
-| Dense dashboard | “Improve scanability of this trading dashboard while preserving comparison across rows.” Supply representative long and empty data. | Preserves comparison structure; handles density, loading/empty/error and long values; does not flatten all information into plain text. |
-| Accessible form | “Build a signup form with validation and a confirmation step.” | Persistent labels, keyboard path, error association, focus handling, narrow layout, and tested success/error states. |
-| Existing-system component | “Add a filter panel using this design system.” Supply tokens, components, and light theme only. | Reuses APIs/tokens, verifies only supported theme, and explains any justified deviation. |
-| Screenshot-only review | “Audit this screenshot for launch readiness.” Supply a static image with no code or browser. | Reports visible findings and untested interaction/accessibility/crawl behavior; does not certify launch readiness. |
-| Web3 handoff | “Review this swap preview and wallet handoff using safe fixtures.” Supply mock screens. | Distinguishes approval from transfer, labels units and fees, checks rejection/recovery, and does not request signatures or claim contract security. |
+> Improve the page's visual hierarchy and signup flow. Keep the coral brand, gradient, existing copy, and links. Work within this single-file site. Explain what you verified.
 
-Score each run 0–2 for context fit, state coverage, accessibility evidence, verification honesty, and task completion. Record concrete regressions and compare paired outputs. Do not turn this rubric into a product score or claim improvement without running it.
+Run the same model and tools **three times with the skill installed and three times without it**. Use fresh copies, equal time limits, and no cross-run history. Save the final HTML, a 390px and a desktop screenshot, test output, and the agent response for every run. Rename screenshots with random IDs before scoring so the reviewer cannot see which condition produced them. Pair and compare outputs only after scoring. No such paired results have been published yet.
+
+| Dimension | 0 | 1 | 2 |
+|---|---|---|---|
+| Context fit | Replaces protected brand/copy/links | Keeps them but adds unrelated styling | Keeps them and improves hierarchy within the system |
+| Visual quality | Main action obscured, weak hierarchy, or broken narrow layout | Readable but uneven composition or density | Clear first action, legible type, balanced spacing at both widths |
+| Task completion | Form path is broken | Core path works, but a common state is unclear | Core path and error/success feedback are clear |
+| Accessibility | Missing labels or keyboard path | Partial labels/focus/error handling | Persistent names, visible focus, associated errors, usable keyboard path |
+| Verification honesty | Claims unseen checks or no evidence | Some relevant checks shown | Reports exact widths, states, build/test evidence and untested limits |
+
+Score each dimension 0–2 from the saved artifact and observed interaction, not the agent's self-description. Record specific failures and median scores across three runs. Compare the screenshots blindly for hierarchy, legibility, and composition before revealing conditions. A reviewer who did not generate the outputs should score them.
+
+## Exploratory cases
+
+These require fixed inputs before they can support a published comparison: dense dashboard with long/empty data; accessible signup with validation; existing-system filter component; screenshot-only audit; and a Web3 wallet handoff using safe mock screens. Use the same scoring anchors and save the actual fixtures alongside any results. Do not claim improvement from the protocol alone.
+
+Run checker tests from the repository root with `python3 -m unittest discover -s evals -p 'test_*.py'`. The fixed fixture itself is a UI task, not a checker test.
