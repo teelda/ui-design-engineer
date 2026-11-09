@@ -19,7 +19,7 @@ ID; screen/URL; component; severity; category/layer; classification (observed de
 1. Verdict for the requested decision, with evidence limits.
 2. Primary journey steps and tested state of each.
 3. Highest-impact unique findings in order; make remaining details expandable or linked when possible.
-4. Twelve-layer coverage matrix, including untested and inapplicable checks.
+4. For a journey or launch review: the review-layer coverage matrix, including untested and inapplicable layers. Skip it for a single-screen review.
 5. Regression tests and exit criteria.
 
-Never invent user studies, success metrics, score distributions, past failures or fixes. Self-auditing RedPenn is useful dogfooding, not independent validation of its model. Repeatability requires fixed inputs and multiple recorded runs; before/after quality requires checking the actual changes and controlling for run variance.
+Never invent user studies, success metrics, score distributions, past failures or fixes. Auditing your own product is useful, but it is not independent validation. Repeatability requires fixed inputs and multiple recorded runs; before/after quality requires checking the actual changes and controlling for run variance.

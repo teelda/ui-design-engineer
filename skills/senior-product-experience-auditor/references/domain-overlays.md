@@ -22,7 +22,7 @@ Use only applicable overlays, not every checklist on every product.
 
 These are review lenses, not compliance certifications. Use current jurisdiction- and product-specific sources before asserting a legal, clinical or financial requirement.
 
-## Web3 journey review (from the supplied decentralization UX talk)
+## Web3 journey review
 
 Start with the user's actual goal, experience with wallets, device and accessibility needs. A token purchase is often an intermediate task; follow through to membership, play, exchange or another intended outcome. Do not assume a crypto-native audience.
 
