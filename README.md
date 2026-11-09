@@ -26,9 +26,12 @@ npx skills add teelda/ui-design-engineer --skill search-answer-readiness
 
 For a manual install, copy the **whole** skill folder (for example `skills/ui-design-engineer/`) into your agent's skills directory. Each `SKILL.md` links to its own `references/` and `scripts/`; copying that file alone omits them. Existing manual copies need replacing when you update.
 
-## Source checker
+## Checkers
 
-From this repository, run `python3 skills/ui-design-engineer/scripts/ui_lint.py <project-paths>`. After installing, run the installed skill's `scripts/ui_lint.py` by absolute path. See [checker coverage](skills/ui-design-engineer/references/source-checker.md) for supported syntax and exclusions.
+Both run on the Python standard library. After installing, run the installed skill's script by absolute path.
+
+- **UI source checker:** `python3 skills/ui-design-engineer/scripts/ui_lint.py <project-paths>` flags design and accessibility candidates in HTML/CSS/JSX/TSX. See [its coverage](skills/ui-design-engineer/references/source-checker.md).
+- **Search checker:** `python3 skills/search-answer-readiness/scripts/search_check.py <urls> --exclude <private-urls>` fetches live pages and checks status, robots.txt per crawler, noindex, canonical, metadata, raw-HTML content, links, social tags, JSON-LD, hreflang and sitemaps. See [its coverage](skills/search-answer-readiness/references/checker.md).
 
 ## Evaluation
 
