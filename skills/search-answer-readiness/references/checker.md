@@ -5,9 +5,13 @@
 ```text
 search_check.py URL [URL ...] [--exclude URL ...] [--json] [--strict]
                 [--timeout 15] [--min-words 50] [--sitemap-sample 25]
+                [--crawl N] [--psi] [--psi-strategy mobile desktop] [--psi-key KEY]
 ```
 
 `--strict` exits 1 when any check fails. `--json` prints a list of `{page, check, result, detail}`.
+
+- `--crawl N` follows same-host `<a href>` links from the given URLs to up to N more pages, skipping assets and anything `robots.txt` blocks for Googlebot. It fetches one page at a time. Use a small N on sites you do not own.
+- `--psi` asks Google PageSpeed Insights for Core Web Vitals. **This sends each URL to Google.** The keyless quota is shared and often exhausted (HTTP 429), so set `PSI_API_KEY` or pass `--psi-key`; a free key comes from the Google Cloud console. A request can take up to a minute per URL and strategy.
 
 | Check | What it does | Does not establish |
 |---|---|---|
@@ -24,5 +28,7 @@ search_check.py URL [URL ...] [--exclude URL ...] [--json] [--strict]
 | `hreflang` | Each alternate returns 200 and links back | Correct language/region codes |
 | Sitemap | Declared or `/sitemap.xml`, gzip and one level of index; samples entries for non-200, redirects and `noindex`; excluded URLs listed | Every entry on a large site; a missing sitemap is information, not a failure |
 | Exclusions | Excluded URLs return 401/403/404/410 or a readable `noindex`; `robots.txt`-only blocks are a risk | Access control strength |
+| Crawl (`--crawl`) | Broken internal links (fail), internal links that redirect, pages without a title, duplicate titles among indexable pages, linked `noindex` and canonical-elsewhere pages, indexable pages missing from their host's sitemap, and orphan sitemap URLs (only when the crawl reached every linked page) | Pages not linked from the start URLs; JavaScript-only links |
+| Core Web Vitals (`--psi`) | Chrome UX Report p75 for LCP, INP and CLS, rated good / needs improvement / poor (any poor fails, any needs-improvement is a risk), falling back to origin data and saying so; plus one Lighthouse lab run as information | Lab numbers are not field data; no field data is `not_tested` |
 
-Results are `fail`, `risk`, `pass`, `info`, or `not_tested`. Search Console data, Core Web Vitals field data, and AI citations are always `not_tested`.
+Results are `fail`, `risk`, `pass`, `info`, or `not_tested`. Search Console data and AI citations are always `not_tested`; Core Web Vitals are `not_tested` unless `--psi` returns field data.

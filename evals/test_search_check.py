@@ -1,5 +1,6 @@
 import functools
 import importlib.util
+import tempfile
 import threading
 import unittest
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -151,6 +152,75 @@ class CrossHostRedirectTests(unittest.TestCase):
             for server in (target, source):
                 server.shutdown()
                 server.server_close()
+
+
+class CrawlTests(unittest.TestCase):
+    def test_crawl_finds_broken_links_duplicates_noindex_and_orphans(self):
+        page = "<html lang='en'><head><title>{title}</title>{head}</head><body><h1>x</h1>{body}</body></html>"
+        files = {
+            "index.html": page.format(title="Crawl test home", head="", body="<a href='/a/'>a</a><a href='/b/'>b</a><a href='/missing/'>m</a><a href='/hidden/'>h</a>"),
+            "a/index.html": page.format(title="Same title", head="", body="<a href='/'>home</a>"),
+            "b/index.html": page.format(title="Same title", head="", body=""),
+            "hidden/index.html": page.format(title="Hidden page", head="<meta name='robots' content='noindex'>", body=""),
+            "orphan/index.html": page.format(title="Orphan page", head="", body=""),
+        }
+        with tempfile.TemporaryDirectory() as folder:
+            for name, body in files.items():
+                path = Path(folder) / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(body, encoding="utf-8")
+            server = ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(QuietHandler, directory=folder))
+            base = f"http://127.0.0.1:{server.server_address[1]}"
+            (Path(folder) / "sitemap.xml").write_text(
+                "<urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>"
+                + "".join(f"<url><loc>{base}{p}</loc></url>" for p in ("/", "/a/", "/orphan/"))
+                + "</urlset>", encoding="utf-8")
+            threading.Thread(target=server.serve_forever, daemon=True).start()
+            try:
+                args = SimpleNamespace(timeout=5, min_words=50, sitemap_sample=5, crawl=20, psi=False)
+                findings = search_check.run([base + "/"], [], args).findings
+            finally:
+                server.shutdown()
+                server.server_close()
+        crawl = {f["check"]: f for f in findings if f["page"] == "crawl"}
+        self.assertEqual("fail", crawl["broken links"]["result"])
+        self.assertIn("/missing/", crawl["broken links"]["detail"])
+        self.assertEqual("risk", crawl["duplicate titles"]["result"])
+        self.assertIn("/hidden/", crawl["noindex pages"]["detail"])
+        self.assertEqual("risk", crawl["orphan pages"]["result"])
+        self.assertIn("/orphan/", crawl["orphan pages"]["detail"])
+        self.assertIn("/b/", crawl["sitemap coverage"]["detail"])
+        self.assertIn("every linked page was reached", crawl["coverage"]["detail"])
+
+
+class PageSpeedTests(unittest.TestCase):
+    def test_field_data_ratings(self):
+        data = {
+            "loadingExperience": {"metrics": {
+                "LARGEST_CONTENTFUL_PAINT_MS": {"percentile": 2100},
+                "INTERACTION_TO_NEXT_PAINT": {"percentile": 350},
+                "CUMULATIVE_LAYOUT_SHIFT_SCORE": {"percentile": 5},
+            }},
+            "lighthouseResult": {"audits": {"largest-contentful-paint": {"numericValue": 3100.4}}},
+        }
+        findings = search_check.evaluate_psi(data, "mobile")
+        check, result, detail = findings[0]
+        self.assertEqual("risk", result)
+        self.assertIn("INP 350ms (needs improvement)", detail)
+        self.assertIn("CLS 0.05 (good)", detail)
+        self.assertEqual("info", findings[1][1])
+
+    def test_poor_metric_fails_and_origin_fallback_is_named(self):
+        data = {
+            "loadingExperience": {"origin_fallback": True, "metrics": {}},
+            "originLoadingExperience": {"metrics": {"LARGEST_CONTENTFUL_PAINT_MS": {"percentile": 4500}}},
+        }
+        check, result, detail = search_check.evaluate_psi(data, "desktop")[0]
+        self.assertEqual("fail", result)
+        self.assertIn("whole origin", detail)
+
+    def test_no_field_data_is_not_tested(self):
+        self.assertEqual("not_tested", search_check.evaluate_psi({}, "mobile")[0][1])
 
 
 if __name__ == "__main__":
