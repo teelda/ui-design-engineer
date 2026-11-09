@@ -14,8 +14,8 @@ For a manual install, copy the **whole** [`skill/`](skill/) folder into your age
 
 - Build or refine a page, component, form, or dashboard while preserving its existing design system.
 - Request a focused UI review with evidence limits stated. Read the Web3 or search reference only when that topic is in scope.
-- Run `python3 skill/scripts/ui_lint.py <paths>` for source-level review candidates. It does not certify accessibility or visual quality.
+- From this repository, run `python3 skill/scripts/ui_lint.py <project-paths>`. After installing, locate the installed `SKILL.md` and run its sibling `scripts/ui_lint.py` by absolute path. See [checker coverage](skill/references/source-checker.md) for supported syntax and exclusions.
 
-The [evaluation cases](evals/README.md) provide paired with-skill/without-skill prompts and a scoring rubric. [Illustrative examples](evals/examples.md) show how context changes a decision. No paired benchmark has been run or published yet.
+The [evaluation protocol](evals/README.md) includes a fixed fixture, repeated-run procedure, and scoring anchors. [Illustrative examples](evals/examples.md) show how context changes a decision. Paired model results have not been published yet.
 
 RedPenn's browser extension has its own DOM inspector. This public skill does not require RedPenn or access to its private source. Its guidance is separate from the extension's hosted audit model.

@@ -1,4 +1,6 @@
 import importlib.util
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -34,6 +36,41 @@ class UiLintTests(unittest.TestCase):
     def test_unresolved_colors_are_not_claimed_as_failures(self):
         kinds = self.inspect("theme.css", ".body { color: var(--text); background-color: var(--surface); }")
         self.assertNotIn("contrast", kinds)
+
+    def test_jsx_names_and_tailwind_candidates(self):
+        kinds = self.inspect("Form.tsx", """<label><input placeholder={hint} /></label>
+          <input placeholder={hint} aria-labelledby="missing" />
+          <input placeholder={hint} aria-label={name} />
+          <div className="bg-gradient-to-r transition-all outline-none" />""")
+        self.assertEqual(kinds.count("placeholder-label"), 0)
+        self.assertEqual(kinds.count("label-unresolved"), 2)
+        self.assertIn("gradient", kinds)
+
+    def test_comments_and_reasoned_suppression(self):
+        kinds = self.inspect("style.css", """/* .bad { color: #777; background: #fff; } */
+          /* ui-lint: ok gradient -- existing brand hero */
+          .hero { background: linear-gradient(red, blue); }
+          .text { color: #777; background: #fff; }""")
+        self.assertEqual(kinds, ["contrast"])
+
+    def test_cli_rejects_missing_and_empty_inputs(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            for path in (root / "missing", root):
+                result = subprocess.run([sys.executable, str(SCRIPT), "--strict", str(path)], capture_output=True, text=True)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("error:", result.stderr)
+            result = subprocess.run([sys.executable, str(SCRIPT), "--allow-empty", str(root)], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0)
+            self.assertIn("0 file(s)", result.stdout)
+
+    def test_directory_excludes_generated_files(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "app.css").write_text(".ok { color: #000; background: #fff; }")
+            (root / "node_modules").mkdir()
+            (root / "node_modules" / "bad.css").write_text(".bad { color: #777; background: #fff; }")
+            self.assertEqual(ui_lint.collect_files([root]), [root / "app.css"])
 
 
 if __name__ == "__main__":
