@@ -1,6 +1,6 @@
-# Twelve review layers
+# Review layers
 
-For each layer record: tested / partially tested / not tested / not applicable, evidence, findings and remaining checks. A missing state is not automatically a defect unless the task needs it.
+For a journey or launch review, record each layer as tested / partially tested / not tested / not applicable, with evidence, findings and remaining checks. For a single screen, inspect only the layers that apply and skip the table. A missing state is not automatically a defect unless the task needs it.
 
 | Layer | Inspect |
 |---|---|
@@ -16,6 +16,8 @@ For each layer record: tested / partially tested / not tested / not applicable, 
 | Domain rules | Activate only applicable domain overlays. Separate UX defects from unverified legal or specialist claims. |
 | AI UX | Generated versus source data, uncertainty, citations, progress truthfulness, interruption/cancel, retry, incorrect findings, feedback, approval boundaries and score semantics. |
 | Implementation | Actual behavior, console/API errors, persistence, refresh, tab switching, races, performance measurements and release parity. Distinguish production, preview and mocks. |
+| Discoverability | For public pages: can people and answer engines find, read and cite them? For a launch review, run `search-answer-readiness` and summarise its verdicts here; if it is not installed, record the layer as not tested. |
+| Behavioural evidence | Funnel steps and drop-off, success-event tracking, retention or repeat use, and support/feedback themes, from owner-supplied data only. Map each high-drop step to interface findings, or mark it unexplained. Record "not tested" when no data is supplied. |
 
 Useful primary references (check current guidance when citing specific requirements):
 - https://www.w3.org/TR/WCAG22/

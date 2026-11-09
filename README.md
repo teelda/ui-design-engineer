@@ -1,6 +1,14 @@
-# UI Design Engineer
+# Product quality skills
 
-A reusable skill for building and refining web interfaces in their product context. It covers design decisions, component and token reuse, interaction states, responsive checks, and honest verification. Its audit route is for focused UI reviews; the separate [Senior Product Experience Auditor](https://github.com/teelda/ui-design-engineer/tree/main/skills/senior-product-experience-auditor) follows whole journeys across product patterns and surfaces.
+Three agent skills, one job each:
+
+| Skill | Use it to | Folder |
+|---|---|---|
+| **ui-design-engineer** | Build or refine a page, component, form, or dashboard with deliberate design decisions, reused tokens, and verified states | [`skills/ui-design-engineer/`](skills/ui-design-engineer/) |
+| **senior-product-experience-auditor** | Review an existing screen, journey, or launch — UX, accessibility, Web3 and AI products, and analytics/funnel evidence when supplied | [`skills/senior-product-experience-auditor/`](skills/senior-product-experience-auditor/) |
+| **search-answer-readiness** | Check whether public pages can be found, read, and cited by search engines and AI answer engines (SEO and AEO) | [`skills/search-answer-readiness/`](skills/search-answer-readiness/) |
+
+The design skill builds; the auditor grades. A launch review in the auditor calls on the search skill for its discoverability layer.
 
 ## Install
 
@@ -8,20 +16,26 @@ A reusable skill for building and refining web interfaces in their product conte
 npx skills add teelda/ui-design-engineer --skill ui-design-engineer
 ```
 
-For broader product review, install the second skill from the same repository:
-
 ```bash
 npx skills add teelda/ui-design-engineer --skill senior-product-experience-auditor
 ```
 
-For a manual install, copy the **whole** [`skill/`](skill/) folder into your agent's skills directory. `SKILL.md` links to `references/` and `scripts/`; copying that file alone omits those capabilities. Existing manual copies need replacing when you update.
+```bash
+npx skills add teelda/ui-design-engineer --skill search-answer-readiness
+```
 
-## Use
+For a manual install, copy the **whole** skill folder (for example `skills/ui-design-engineer/`) into your agent's skills directory. Each `SKILL.md` links to its own `references/` and `scripts/`; copying that file alone omits them. Existing manual copies need replacing when you update.
 
-- Build or refine a page, component, form, or dashboard while preserving its existing design system.
-- Request a focused UI review with evidence limits stated. Read the Web3 or search reference only when that topic is in scope. Use the separate product-review skill for multi-step workflows and launch decisions.
-- From this repository, run `python3 skill/scripts/ui_lint.py <project-paths>`. After installing, locate the installed `SKILL.md` and run its sibling `scripts/ui_lint.py` by absolute path. See [checker coverage](skill/references/source-checker.md) for supported syntax and exclusions.
+## Source checker
 
-The [evaluation protocol](evals/README.md) includes a fixed fixture, repeated-run procedure, and scoring anchors. [Illustrative examples](evals/examples.md) show how context changes a decision. Paired model results have not been published yet.
+From this repository, run `python3 skills/ui-design-engineer/scripts/ui_lint.py <project-paths>`. After installing, run the installed skill's `scripts/ui_lint.py` by absolute path. See [checker coverage](skills/ui-design-engineer/references/source-checker.md) for supported syntax and exclusions.
 
-RedPenn's browser extension has its own DOM inspector. This public skill does not require RedPenn or access to its private source. Its guidance is separate from the extension's hosted audit model.
+## Evaluation
+
+The [evaluation protocol](evals/README.md) includes a fixed design fixture, a search-readiness fixture, a repeated-run procedure, and scoring anchors. [Illustrative examples](evals/examples.md) show how context changes a decision. Paired model results have not been published yet.
+
+Run the checker tests from the repository root:
+
+```bash
+python3 -m unittest discover -s evals -p 'test_*.py'
+```
