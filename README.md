@@ -35,15 +35,12 @@ For manual installation, copy the **whole** skill folder into your agent's skill
 
 ## Checkers and evidence
 
-The UI source checker flags candidates in HTML/CSS/JSX/TSX:
+Both scripts use the Python standard library. Run an installed script by its absolute path.
 
-```bash
-python3 skills/ui-design-engineer/scripts/ui_lint.py <project-paths>
-```
+- **UI source checker:** `python3 skills/ui-design-engineer/scripts/ui_lint.py <project-paths>` flags design and accessibility candidates in HTML/CSS/JSX/TSX. Read its [coverage and limits](skills/ui-design-engineer/references/source-checker.md).
+- **Search checker:** `python3 skills/search-answer-readiness/scripts/search_check.py <urls> --exclude <private-urls>` checks HTTP status, crawler access, index directives, canonical URLs, metadata, raw HTML, links, social tags, structured data, language alternates, and sitemaps. Read its [coverage and limits](skills/search-answer-readiness/references/checker.md). It cannot establish actual indexing, rankings, or AI citations.
 
-Read its [coverage and limits](skills/ui-design-engineer/references/source-checker.md) before interpreting findings. The search skill currently uses an evidence checklist; the optional search checker in draft PRs is not part of this release.
-
-Run the repository's 10 checker tests with `python3 -m unittest discover -s evals -p 'test_*.py'`. The [evaluation protocol](evals/README.md) describes paired agent tests. One [exploratory paired pilot](evals/results/quiet-pilot/README.md) found nearly identical small edits with and without the UI skill; it does not demonstrate a quality benefit. Repeated, blinded results have not been published, and effects on design quality and user outcomes are **not yet measured**. Reports should label observation, inference, and untested scope rather than promise accuracy, accessibility certification, search rankings, or AI citations.
+Run the checker tests with `python3 -m unittest discover -s evals -p 'test_*.py'`. The [evaluation protocol](evals/README.md) describes paired agent tests. One [exploratory paired pilot](evals/results/quiet-pilot/README.md) found nearly identical small edits with and without the UI skill; it does not demonstrate a quality benefit. Repeated, blinded results have not been published, and effects on design quality and user outcomes are **not yet measured**. Reports should label observation, inference, and untested scope rather than promise accuracy, accessibility certification, search rankings, or AI citations.
 
 Found a wrong or missing finding? Open a GitHub issue with the skill name, agent/tool, exact request, reachable states, and the relevant output. Remove private URLs, credentials, and user data before posting.
 
