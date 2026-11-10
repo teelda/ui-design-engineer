@@ -13,6 +13,16 @@ Search engines and answer engines need the same three things: they can **fetch**
 2. For each intended page, write the one question a searcher would bring to it.
 3. State the evidence available: live fetch, rendered browser, source code, Search Console, analytics, or screenshots only. Anything outside that evidence is **not tested**.
 
+## Run the checker first
+
+When the pages are reachable over HTTP, resolve `scripts/search_check.py` relative to this installed SKILL.md and run it from any directory:
+
+```bash
+python3 /absolute/path/to/search-answer-readiness/scripts/search_check.py <intended-urls> --exclude <private-urls>
+```
+
+It fetches each URL without JavaScript and checks status and redirects, `robots.txt` per crawler and purpose, noindex, canonical, title and description, raw-HTML text, click-handler links, Open Graph tags, JSON-LD, `hreflang` reciprocity, sitemap contents, link discovery, and that excluded URLs stay out. Read [checker coverage](references/checker.md) before interpreting results. Add `--crawl 50` for a site review: it follows internal links to find broken links, duplicate titles and orphan sitemap pages. Add `--psi` for Core Web Vitals only when the owner agrees to send the URLs to Google PageSpeed Insights and a `PSI_API_KEY` is available; otherwise mark Core Web Vitals **not tested**. Treat the output as evidence for the rows below, then do the judgement checks it cannot: owner intent, answer quality, rendered-page comparison and firewall rules. Fetch only sites the owner asked you to review.
+
 ## Checks
 
 - **Technical and on-page search:** read [technical-search.md](references/technical-search.md) — crawl access, indexing, sitemap, rendering, metadata, social previews, language versions, page experience, images, content intent, structured data.
