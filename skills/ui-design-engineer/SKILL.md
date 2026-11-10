@@ -5,7 +5,7 @@ description: Design, build, or refine a web UI — a page, component, form, or d
 
 # UI Design Engineer
 
-Choose a design that fits the task, audience, content, and product. Start with the existing system when one exists; use the greenfield defaults below when it does not.
+For an agent building or refining web UI, choose a design that fits the user's task, audience, content, and product. Start with the existing system when one exists; use the greenfield defaults below when it does not. A good outcome may be a small edit or no edit when the requested outcome is already met.
 
 ## Route and context
 
@@ -30,10 +30,12 @@ The test is: **is this a decision for this product, or a default the tool suppli
 
 ## Build and verification loop
 
-1. Inspect the existing system or define the greenfield tokens above. Reuse repository conventions and component APIs.
-2. Implement the primary path plus relevant loading, empty, error, long-content, disabled, and permission states. Cover cancellation and recovery where the task needs them. Do not invent states that the product cannot reach.
-3. For a small visual edit, run the relevant build/check and inspect the affected surface at its supported width. For a new or changed interaction, exercise the primary path, relevant failure states, keyboard use, and narrow/wide layouts. Check only supported themes.
-4. If rendering tools or a runnable app are unavailable, make the source change, run the available checks, and say which visual or interaction outcomes remain unverified. Fix observed failures before calling the work done.
+1. Before editing, turn the request into two or three observable outcomes and name what must survive the change. For example: comparison across rows remains possible, the next action is identifiable, and the supported narrow layout has no horizontal overflow. If the request is vague, infer outcomes from the task and state the assumptions.
+2. Inspect the existing system or define the greenfield tokens above. Reuse repository conventions and component APIs. Preserve copy, links, routes, analytics hooks, validation, permissions, localization, and working component behavior unless the request requires a change. Record the relevant baseline behavior so regressions can be checked.
+3. Implement only the change needed for those outcomes, plus relevant loading, empty, error, long-content, disabled, and permission states. Cover cancellation and recovery where the task needs them. Do not invent states that the product cannot reach.
+4. For a small visual edit, run the relevant build/check and inspect the affected surface at its supported width. For a new or changed interaction, exercise the primary path, relevant failure states, keyboard use, and narrow/wide layouts. Check only supported themes. Where the product supports localization, test text expansion, right-to-left layout, and locale-specific input/formatting that applies.
+5. Inspect the cost of added fonts, images, blur, animation, or large components on loading, layout movement, and input response, especially on constrained devices. Measure when tools permit; otherwise name the unverified risk.
+6. If rendering tools or a runnable app are unavailable, make the source change, run the available checks, and say which visual or interaction outcomes remain unverified. Fix observed failures before calling the work done. Compare the result with the outcomes and preserved behavior from steps 1–2.
 
 For repeatable source checks, resolve `scripts/ui_lint.py` **relative to this installed SKILL.md** and run `python3 /absolute/path/to/ui-design-engineer/scripts/ui_lint.py <project-paths>` from the application repository. Read [checker coverage](references/source-checker.md) before interpreting findings. It flags review candidates; rendered inspection decides whether they matter.
 
