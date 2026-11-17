@@ -26,6 +26,10 @@ For each task, run the same agent/model and tool access with and without the ski
 
 These require fixed inputs before they can support a published comparison: dense dashboard with long/empty data; accessible signup with validation; existing-system filter component; screenshot-only audit; and a Web3 wallet handoff using safe mock screens. Use the same scoring anchors and save the actual fixtures alongside any results. Do not claim improvement from the protocol alone.
 
+## Audit report usefulness check
+
+Use an unfamiliar page or journey that is absent from the skill examples. Freeze the URL/capture, viewports, tool access, task prompt, and source material before testing the auditor with and without the skill. A scorer who did not write the reports should attempt to locate and understand each top finding without asking the auditor follow-up questions. Score each report 0–2 for: (1) exact location and observed UI state, (2) explanation of the visitor's task and the consequence or uncertainty, (3) concrete change within the existing design, (4) observable verification, and (5) honest coverage and preserved strengths. Deduct for stale claims, unsupported mobile or accessibility assertions, and a priority table presented as the full audit. Save the raw reports and scores. This is a proposed test; it has not been run and does not establish that the revised skill improves reports.
+
 The [search-readiness fixture](fixtures/search-readiness/README.md) has known technical and on-page defects for testing the `search-answer-readiness` skill. It is a diagnostic case, not evidence of ranking or AI citation outcomes. `test_search_check.py` serves this fixture locally and checks that the search checker finds each known defect.
 
 Run checker tests from the repository root with `python3 -m unittest discover -s evals -p 'test_*.py'`. The fixed fixture itself is a UI task, not a checker test.
