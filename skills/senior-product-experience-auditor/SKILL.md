@@ -16,7 +16,7 @@ Start with **user and task → surface → product pattern → domain risks → 
 
 Scale the review to the request: a single screen or component gets a focused review; a journey or launch decision gets the full workflow below. Focused means fewer findings, not findings reduced to labels and one-line fixes. If the user asks for a quick summary, give the summary first and offer or link the supporting review; do not imply that the summary is the whole audit.
 
-For a full design or UI/UX audit, read [the design principles audit](references/design-principles.md) and inspect its applicable dimensions. Give visual craft and product interaction their own supported judgments. When the user asks for the house bar, also read [the house bar](references/house-bar.md) and label findings that rest on it.
+For a full design or UI/UX audit, read [the design principles audit](references/design-principles.md) and inspect its applicable dimensions. Give visual craft and product interaction their own supported judgments.
 
 Use [the review layers](references/review-layers.md) for coverage. Read only the applicable [surface checks](references/surfaces.md), [product-pattern checks](references/product-patterns.md), and [domain overlays](references/domain-overlays.md). Use [the evidence contract](references/evidence-contract.md) for every report. A responsive web test does not establish native mobile or desktop behavior.
 
