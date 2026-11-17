@@ -86,6 +86,13 @@ class UiLintTests(unittest.TestCase):
           <label><input placeholder="Email"></label>""")
         self.assertEqual(kinds.count("label-unresolved"), 2)
 
+    def test_large_file_without_css_blocks_stays_fast(self):
+        import time
+        start = time.monotonic()
+        kinds = self.inspect("export.html", "<p>message text</p>\n" * 20000 + "<style>.a{color:#777;background:#fff}</style>")
+        self.assertLess(time.monotonic() - start, 5)
+        self.assertEqual(kinds, ["contrast"])
+
     def test_html_and_trailing_scss_comments_are_ignored(self):
         kinds = self.inspect("page.html", "<!-- <input placeholder='Email'> -->")
         self.assertEqual(kinds, [])
