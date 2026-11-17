@@ -8,7 +8,7 @@ from pathlib import Path
 EXTENSIONS = {".html", ".css", ".scss", ".jsx", ".tsx"}
 EXCLUDED_DIRS = {".git", ".next", "build", "coverage", "dist", "node_modules", "vendor"}
 HEX = re.compile(r"^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
-BLOCK = re.compile(r"([^{}]+)\{([^{}]+)\}", re.S)
+BLOCK = re.compile(r"\{([^{}]+)\}", re.S)  # declaration body only; a selector group made this quadratic on large files
 DECL = re.compile(r"([\w-]+)\s*:\s*([^;]+)")
 FIELD = re.compile(r"<(input|textarea)\b[^>]*\bplaceholder\s*=\s*(?:['\"][^'\"]*['\"]|\{[^}]+\})[^>]*>", re.I | re.S)
 COMMENT = re.compile(r"/\*.*?\*/|<!--.*?-->|(?<!:)//[^\n]*", re.S)
@@ -101,13 +101,16 @@ def house_checks(clean, report, tokens, spacing_scale):
             flag(offset, "uppercase", "use sentence case; keep acronyms capitalised")
 
     pills, radii = [], {}
+    spacing_hits, colour_hits = {}, {}  # one candidate per distinct value per file: [first offset, label, uses]
     for block in BLOCK.finditer(clean):
-        for decl in DECL.finditer(block.group(2)):
+        for decl in DECL.finditer(block.group(1)):
             name, value = decl.group(1).lower(), decl.group(2).strip()
-            offset = block.start(2) + decl.start()
-            if name.startswith("--") or "var(" in value or "calc(" in value:
+            offset = block.start(1) + decl.start()
+            if name.startswith("--"):
                 continue
-            if name == "border-radius" or re.fullmatch(r"border-[a-z-]+-radius", name):
+            # Variable or computed lengths cannot be judged from source; colour fallbacks inside var() still can.
+            numeric = "var(" not in value and "calc(" not in value
+            if numeric and (name == "border-radius" or re.fullmatch(r"border-[a-z-]+-radius", name)):
                 for number, unit in LENGTH.findall(value):
                     size = px(number, unit or None)
                     if unit == "%" or size is None or size == 0:
@@ -116,14 +119,14 @@ def house_checks(clean, report, tokens, spacing_scale):
                         pills.append(offset)
                     else:
                         radii.setdefault(round(size, 2), offset)
-            elif SPACING.match(name):
+            elif numeric and SPACING.match(name):
                 for number, unit in LENGTH.findall(value):
                     size = px(number, unit or None)
                     if size is None or size == 0:
                         continue
                     on_scale = size in spacing_scale if spacing_scale else size % 4 == 0
                     if not on_scale:
-                        flag(offset, "off-scale-spacing", f"{number}{unit} is off the {'declared scale' if spacing_scale else '4px grid'}")
+                        spacing_hits.setdefault(round(size, 2), [offset, f"{number}{unit}", 0])[2] += 1
             elif name in ("text-shadow",) and value.lower() != "none":
                 flag(offset, "glow", "decorative text shadow; keep only if the live product uses it")
             elif name == "box-shadow" and value.lower() != "none":
@@ -133,10 +136,17 @@ def house_checks(clean, report, tokens, spacing_scale):
                         flag(offset, "glow", "large blurred shadow; keep only if the live product uses it")
             elif name in ("filter", "backdrop-filter") and "drop-shadow(" in value:
                 flag(offset, "glow", "drop-shadow filter; keep only if the live product uses it")
-            if tokens and not name.startswith("--"):
-                for hex_match in HEX_LITERAL.finditer(value):
-                    if normalize_hex(hex_match.group(0)) not in tokens:
-                        flag(offset, "off-token-color", f"{hex_match.group(0)} is not a defined colour token")
+            if tokens:
+                # url(#id) is an SVG fragment reference, not a colour.
+                for hex_match in HEX_LITERAL.finditer(re.sub(r"url\([^)]*\)", " ", value, flags=re.I)):
+                    colour = normalize_hex(hex_match.group(0))
+                    if colour not in tokens:
+                        colour_hits.setdefault(colour, [offset, hex_match.group(0), 0])[2] += 1
+    scale_name = "declared scale" if spacing_scale else "4px grid"
+    for offset, label, uses in spacing_hits.values():
+        flag(offset, "off-scale-spacing", f"{label} is off the {scale_name} ({uses} use{'s' if uses > 1 else ''} in this file)")
+    for offset, label, uses in colour_hits.values():
+        flag(offset, "off-token-color", f"{label} is not a defined colour token ({uses} use{'s' if uses > 1 else ''} in this file)")
     for offset, classes in class_strings(clean):
         for name in classes.split():
             if name == "rounded-full":
@@ -219,7 +229,7 @@ def inspect(path: Path, profile: str = "default", tokens=frozenset(), spacing_sc
             flag(match.start(), "placeholder-label", "verify a persistent label; placeholder alone is insufficient")
 
     for block in BLOCK.finditer(clean):
-        matches = list(DECL.finditer(block.group(2)))
+        matches = list(DECL.finditer(block.group(1)))
         declarations = {match.group(1).lower(): match.group(2).strip() for match in matches}
         foreground = rgb(declarations.get("color", ""))
         background = rgb(declarations.get("background-color", declarations.get("background", "")))
@@ -233,7 +243,7 @@ def inspect(path: Path, profile: str = "default", tokens=frozenset(), spacing_sc
         ratio = contrast(foreground, background)
         if ratio < threshold:
             color_match = next(match for match in matches if match.group(1).lower() == "color")
-            flag(block.start(2) + color_match.start(), "contrast", f"same-rule solid colors {ratio:.2f}:1 below {threshold}:1; verify rendered text")
+            flag(block.start(1) + color_match.start(), "contrast", f"same-rule solid colors {ratio:.2f}:1 below {threshold}:1; verify rendered text")
     if profile == "house":
         house_checks(clean, flag, tokens, spacing_scale)
     return sorted(findings)

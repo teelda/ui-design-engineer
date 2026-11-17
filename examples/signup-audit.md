@@ -27,30 +27,30 @@ The signup path is present and the action is clearly named. The fixed grid width
 
 ## House bar (opt-in, labelled preference)
 
-This section shows the report when the owner asks for the house bar. These findings rest on that profile, not on general usability evidence. The brief protects the coral gradient, so it is not flagged.
+This section shows the report when the owner asks for the house bar. These findings rest on that profile, not on general usability evidence, and come from source and `--profile house` only, so they are candidates to verify, not confirmed visual defects. The brief protects the coral gradient, so it is not flagged.
 
-**3 · House bar · UI · owner: design**
+**3 · House bar · UI · observed in source · owner: design**
 - **Where:** `.eyebrow`, line 16.
 - **What I saw:** `text-transform: uppercase` on "A calmer place to plan".
 - **Why it matters:** The house bar uses sentence case for eyebrows and labels.
 - **Fix:** Remove the transform and reduce the `.15em` letter-spacing to suit mixed-case text.
 - **Verify:** `ui_lint.py --profile house` no longer reports `uppercase` on line 16.
 
-**4 · House bar · UI · owner: design**
+**4 · House bar · UI · source candidate · owner: design**
 - **Where:** `.art`, line 19.
 - **What I saw:** `box-shadow: 0 30px 70px` under the gradient panel.
-- **Why it matters:** A large blurred shadow is decoration the house bar avoids unless the live product already uses it.
+- **Why it matters:** If the rendered panel reads as a glow, it is decoration the house bar avoids unless the live product already uses it.
 - **Fix:** Remove the shadow, or record it as a brand decision with `/* ui-lint: ok glow -- reason */`.
 - **Verify:** The panel still separates from the cream background at both widths.
 
-**5 · House bar · UI · owner: design**
+**5 · House bar · UI · source candidate · owner: design**
 - **Where:** `header`, `nav`, `main` and `form` spacing (lines 11, 13, 15, 21); hard-coded colours (lines 19, 22, 23, 25).
 - **What I saw:** `--profile house` reports 22px, 25px, 45px and 75px spacing off the 4px grid, and five hard-coded hex uses (four distinct colours) that are not among the page's `--` colour tokens (including `#b7aaa2` on the input border and `#e8dcd3` on the footer rule).
-- **Why it matters:** Off-grid values and one-off colours drift from the system with each edit.
-- **Fix:** Snap spacing to 24, 24, 48 and 72px (or the product's scale), and move the colours into named tokens.
-- **Verify:** `ui_lint.py --profile house` reports no `off-scale-spacing` or `off-token-color` on these lines, and the rendered layout keeps its proportions.
+- **Why it matters:** The fixture defines no spacing scale, so the 4px grid is the checker's default, not this page's system. These values may be deliberate.
+- **Fix:** None prescribed yet. Confirm the product's spacing scale and palette with its owner first.
+- **Verify:** Render at 390px and desktop and check whether these gaps and colours break a visible relationship (alignment with the header, uneven rhythm, a colour that reads off-brand). Only those become findings.
 
-**House bar verdict: ONE MORE PASS.** Fix 1 first, then 3 and 4.
+**House bar verdict: insufficient evidence.** The review is source-only. Render the page at 390px and desktop, and confirm the spacing scale, before giving SHIP or ONE MORE PASS. Finding 1 still comes first.
 
 ## What works and should stay
 The coral tokens, the clear "Join early access" action, the existing copy and the contact link.

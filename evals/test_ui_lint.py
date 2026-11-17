@@ -98,6 +98,12 @@ class UiLintTests(unittest.TestCase):
             path.write_text(source, encoding="utf-8")
             return [kind for _, kind, _ in ui_lint.inspect(path, "house", tokens, scale)]
 
+    def test_large_file_without_css_blocks_stays_fast(self):
+        import time
+        start = time.monotonic()
+        self.inspect("export.html", "<p>message text</p>\n" * 20000 + "<style>.a{color:#777;background:#fff}</style>")
+        self.assertLess(time.monotonic() - start, 5)
+
     def test_default_profile_keeps_repeated_candidates(self):
         self.assertEqual(self.inspect("q.css", ".a{transition:all 1s} .b{transition:all 2s}"), ["transition-all", "transition-all"])
 
@@ -130,6 +136,23 @@ class UiLintTests(unittest.TestCase):
         tokens = ui_lint.color_tokens([":root { --copper: #d77e49; --ink: #04070f; }"])
         self.assertEqual(self.house("j.css", source, tokens), ["off-token-color"])
         self.assertEqual(ui_lint.normalize_hex("#ABC"), "#aabbcc")
+
+    def test_house_palette_ignores_url_fragments_and_checks_var_fallbacks(self):
+        tokens = {"#ffffff"}
+        self.assertEqual(self.house("r.css", ".a { filter: url(#abc); mask: URL(#def); }", tokens), [])
+        self.assertEqual(self.house("s.css", ".a { color: var(--brand, #ff0000); }", tokens), ["off-token-color"])
+        self.assertEqual(self.house("t.css", ".a { color: var(--brand, #fff); }", tokens), [])
+        self.assertEqual(self.house("u.css", ".a { padding: var(--space, 10px); border-radius: calc(9999px); }"), [])
+
+    def test_house_groups_repeated_values_per_file(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "v.css"
+            path.write_text(".a { padding: 10px; }\n.b { margin: 10px 14px; }\n.c { gap: 10px; color: #f00; }\n.d { color: #F00; }\n")
+            found = ui_lint.inspect(path, "house", {"#ffffff"})
+        self.assertEqual([(line, kind) for line, kind, _ in found],
+                         [(1, "off-scale-spacing"), (2, "off-scale-spacing"), (3, "off-token-color")])
+        self.assertIn("3 uses", found[0][2])
+        self.assertIn("2 uses", found[2][2])
 
     def test_house_glow_and_reasoned_suppression(self):
         self.assertEqual(self.house("k.css", ".a { box-shadow: rgba(0,0,0,.4) 0 0 40px; }"), ["glow"])
