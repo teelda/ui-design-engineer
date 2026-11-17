@@ -35,7 +35,7 @@ Use actual production names, plan terms, networks and states in proposed product
 
 Give a supported assessment of visual craft and a supported assessment of interaction/product fit. Neither substitutes for the other. Praise should name the decision and its useful effect. Criticism should identify the relationship that fails and the evidence behind it. Before recommending a change, consider a smaller correction and the tradeoff of the proposed solution.
 
-Use the product's documented design system and user-supplied preferences as constraints. Defaults such as one accent, sentence case or a restrained radius scale are choices for an unbranded design, not universal audit rules. A brand-specific preference should be labelled as such. Do not infer how the interface was generated or classify a decorative choice as a blocker without a relevant impact.
+Use the product's documented design system and user-supplied preferences as constraints. Defaults such as one accent, sentence case or a restrained radius scale are choices for an unbranded design, not universal audit rules. A brand-specific preference should be labelled as such. When the user opts into the [house bar](house-bar.md), apply it as that labelled preference. Do not infer how the interface was generated or classify a decorative choice as a blocker without a relevant impact.
 
 ## Deliver a usable review
 
