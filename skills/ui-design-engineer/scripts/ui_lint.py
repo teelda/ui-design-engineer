@@ -8,7 +8,7 @@ from pathlib import Path
 EXTENSIONS = {".html", ".css", ".scss", ".jsx", ".tsx"}
 EXCLUDED_DIRS = {".git", ".next", "build", "coverage", "dist", "node_modules", "vendor"}
 HEX = re.compile(r"^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
-BLOCK = re.compile(r"([^{}]+)\{([^{}]+)\}", re.S)
+BLOCK = re.compile(r"\{([^{}]+)\}", re.S)  # declaration body only; a selector group made this quadratic on large files
 DECL = re.compile(r"([\w-]+)\s*:\s*([^;]+)")
 FIELD = re.compile(r"<(input|textarea)\b[^>]*\bplaceholder\s*=\s*(?:['\"][^'\"]*['\"]|\{[^}]+\})[^>]*>", re.I | re.S)
 COMMENT = re.compile(r"/\*.*?\*/|<!--.*?-->|(?<!:)//[^\n]*", re.S)
@@ -116,7 +116,7 @@ def inspect(path: Path):
             flag(match.start(), "placeholder-label", "verify a persistent label; placeholder alone is insufficient")
 
     for block in BLOCK.finditer(clean):
-        matches = list(DECL.finditer(block.group(2)))
+        matches = list(DECL.finditer(block.group(1)))
         declarations = {match.group(1).lower(): match.group(2).strip() for match in matches}
         foreground = rgb(declarations.get("color", ""))
         background = rgb(declarations.get("background-color", declarations.get("background", "")))
@@ -130,7 +130,7 @@ def inspect(path: Path):
         ratio = contrast(foreground, background)
         if ratio < threshold:
             color_match = next(match for match in matches if match.group(1).lower() == "color")
-            flag(block.start(2) + color_match.start(), "contrast", f"same-rule solid colors {ratio:.2f}:1 below {threshold}:1; verify rendered text")
+            flag(block.start(1) + color_match.start(), "contrast", f"same-rule solid colors {ratio:.2f}:1 below {threshold}:1; verify rendered text")
     return sorted(findings)
 
 
