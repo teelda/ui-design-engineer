@@ -7,6 +7,8 @@ description: Design, build, refine, or audit a web UI — a page, component, for
 
 For an agent building or refining web UI, choose a design that fits the user's task, audience, content, and product. Start with the existing system when one exists; use the greenfield defaults below when it does not. A good outcome may be a small edit or no edit when the requested outcome is already met.
 
+For an audit, read [the full audit deliverable](references/audit-deliverable.md) before inspection and apply its completion check before responding. A concise opening summary must have a supporting visual and journey review, in chat or a verified linked report, unless the user explicitly requests only a summary.
+
 ## Route and context
 
 1. **Build or refine:** read [build guidance](references/build.md). If editing an existing product, inspect its tokens, components, screens, and supported themes first. Preserve them unless the request or evidence calls for a change.

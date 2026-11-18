@@ -33,3 +33,5 @@ Use an unfamiliar page or journey that is absent from the skill examples. Freeze
 The [search-readiness fixture](fixtures/search-readiness/README.md) has known technical and on-page defects for testing the `search-answer-readiness` skill. It is a diagnostic case, not evidence of ranking or AI citation outcomes. `test_search_check.py` serves this fixture locally and checks that the search checker finds each known defect.
 
 Run checker tests from the repository root with `python3 -m unittest discover -s evals -p 'test_*.py'`. The fixed fixture itself is a UI task, not a checker test.
+
+The [audit deliverable regression scenario](audit-deliverable-regression.md) checks whether a full audit becomes a summary-only response, including standalone installation and unavailable-browser conditions. It has not yet been run.

@@ -18,12 +18,6 @@ Explain the concrete visual relationship or interaction that fails. Give a chang
 
 ## Report
 
-1. Verdict for the requested decision, with evidence limits.
-2. Primary journey steps and tested state of each.
-3. Highest-impact unique findings in order. A priority table can orient the reader, but it is not the full review: expand the top findings using the five parts above. Make lower-impact details expandable or linked when possible.
-4. For a journey or launch review: the review-layer coverage matrix, including untested and inapplicable layers. Skip it for a single-screen review.
-5. Regression tests and exit criteria.
-
-For a UI review, add a short **experience walkthrough** before the findings: what a visitor sees first at each tested width, the primary action and where it leads, and the result or interruption observed. Add **what works and should survive** so a proposed redesign does not erase effective brand, content or interaction choices. State exact widths, device/browser, date and evidence mode when available. If only HTML text or a screenshot was available, do not claim mobile fold position, visual contrast, animation behavior, keyboard behavior, or screen-reader announcements as tested.
+Use [the shared full audit deliverable](audit-deliverable.md) for the report structure, evidence record and completion check. Apply the severity and finding rules above within that structure.
 
 Never invent user studies, success metrics, score distributions, past failures or fixes. Auditing your own product is useful, but it is not independent validation. Repeatability requires fixed inputs and multiple recorded runs; before/after quality requires checking the actual changes and controlling for run variance.
