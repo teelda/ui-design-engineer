@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 SKILLS = Path(__file__).resolve().parents[1] / "skills"
-SHARED = ("design-principles.md",)
+SHARED = ("design-principles.md", "audit-deliverable.md")
 OWNERS = ("ui-design-engineer", "senior-product-experience-auditor")
 
 
